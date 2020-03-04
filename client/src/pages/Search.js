@@ -1,67 +1,89 @@
-import React, { useState, useEffect } from "react";
-import Jumbotron from "../components/Jumbotron";
+import React from "react";
+// jdeld
+import Form from "../components/Form";
+import Results from "../components/Results";
 import API from "../utils/API";
-import DeleteBtn from "../components/DeleteBtn";
-import { Col, Row, Container } from "../components/Grid";
-import { List, ListItem } from "../components/List";
-import { Input, TextArea, FormBtn } from "../components/Form";
 
-const Books = () => {
-  const [books, setBooks] = useState([]);
-
-  useEffect(() => {
-    loadBooks();
-  }, []);
-
-  const loadBooks = async () => {
-    try {
-      const response = await API.getBooks();
-      setBooks(response.data);
-    } catch(error) {
-      console.group("LOAD BOOKS");
-     // console.log(err);
-      console.groupEnd();
-    }
+const booksresults = googleApiResults => {
+    const bookArray = [];
+  
+    googleApiResults.map(book => {
+  
+      const formattedBook = {
+        title: book.volumeInfo.title,
+        authors: book.volumeInfo.authors,
+        description: book.volumeInfo.description,
+        googleId: book.id,
+        image: book.volumeInfo.imageLinks.thumbnail,
+        link: book.volumeInfo.canonicalVolumeLink
+      };
+  
+      bookArray.push(formattedBook);
+      return bookArray
+    });
+    return bookArray;
   };
-
-  return (
-    <Container fluid>
-      <Row>
-        <Col size="md-6">
-          <Jumbotron>
-            <h1>What Books Should I Read?</h1>
-          </Jumbotron>
-          <form>
-            <Input name="title" placeholder="Title (required)" />
-            <Input name="author" placeholder="Author (required)" />
-            <TextArea name="synopsis" placeholder="Synopsis (Optional)" />
-            <FormBtn>Submit Book</FormBtn>
-          </form>
-        </Col>
-        <Col size="md-6 sm-12">
-          <Jumbotron>
-            <h1>Books On My List</h1>
-          </Jumbotron>
-          {books.length ? (
-            <List>
-              {books.map(book => (
-                <ListItem key={book._id}>
-                  <a href={"/books/" + book._id}>
-                    <strong>
-                      {book.title} by {book.author}
-                    </strong>
-                  </a>
-                  <DeleteBtn />
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <h3>No Results to Display</h3>
-          )}
-        </Col>
-      </Row>
-    </Container>
-  );
-}
-
-export default Books;
+  
+  class Search extends React.Component {
+    state = {
+      search: '',
+      results: [],
+      error: ''
+    };
+  
+    saveBook = event => {
+  
+      const chosenBook = this.state.results.find(book => book.googleId === event.target.id);
+  
+      const newSave = {
+        title: chosenBook.title,
+        authors: chosenBook.authors,
+        description: chosenBook.description,
+        googleId: chosenBook.googleId,
+        image: chosenBook.image,
+        link: chosenBook.link
+      };
+  
+      API.saveBook(newSave)
+      console.log(newSave);
+    };
+  
+    
+    handleInputChange = event => {
+        const name = event.target.name;
+        const value = event.target.value;
+        this.setState({
+            [name]: value
+        });
+    };
+  
+    handleFormSubmit = event => {
+      event.preventDefault();
+      API.getBooks(this.state.search)
+        .then(res => {
+          const formattedArray = booksresults(res.data.items);
+          this.setState({results: formattedArray});
+        })
+        .catch(err => console.log(err))
+    };
+  
+    render() {
+      return (
+        <div className="container">
+          
+          <Form
+            handleInputChange={this.handleInputChange}
+            handleFormSubmit={this.handleFormSubmit}
+          />
+          <Results
+            books={this.state.results}
+            buttonAction={this.saveBook}
+            buttonType="btn btn-success mt-2"
+            buttonText="Save Book"
+          />
+        </div>
+      );
+    }
+  }
+  
+  export default Search;

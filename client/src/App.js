@@ -1,20 +1,32 @@
-import React from 'react';
-import Nav from "./components/Nav"; 
-import './App.css';
-import Jumbotron from './components/Jumbotron';
-import Saved from "./pages/Saved"; 
+import React, { Component } from "react";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import Nav from "./components/Nav";
 
-function App() {
-  return (
-    <div>
-      <Nav />
-      <Jumbotron />
-      <Saved />
+import Wrapper from "./components/Wrapper";
 
-      
-    </div>
-    
-  );
-}
+import Search from "./pages/Search";
+import Saved from "./pages/Saved";
+
+import "./App.css";
+
+class App extends Component {
+ 
+  render() {
+    return (
+      <Router>
+        <div>
+          <Nav />
+         
+          <Wrapper>
+            <Route exact path="/" component={Search} />
+            <Route exact path="/search" component={Search} />
+            <Route exact path="/saved" component={Saved} />
+          
+          </Wrapper>
+        </div>
+      </Router>
+    )
+  };
+};
 
 export default App;
